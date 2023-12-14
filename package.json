@@ -1,0 +1,26 @@
+{
+  "name": "fusium",
+  "version": "0.0.9",
+  "description": "A tiny class-based composition/mixin library",
+  "main": "distribution/fusium.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "typescript",
+    "composition",
+    "composable",
+    "mixin",
+    "mixins",
+    "multiple inheritance",
+    "inheritance",
+    "ES6 classes",
+    "classes"
+  ],
+  "author": "Magnus Meseck",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "unitium": "^0.3.2"
+  }
+}
