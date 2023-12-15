@@ -1,11 +1,14 @@
 {
   "name": "fusium",
   "version": "0.0.9",
+  "author": "Magnus Meseck",
+  "license": "MIT",
   "description": "A tiny class-based composition/mixin library",
-  "main": "distribution/fusium.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elemental-mind/fusium.git"
   },
+  "homepage": "https://github.com/elemental-mind/fusium#readme",
   "keywords": [
     "typescript",
     "composition",
@@ -17,10 +20,18 @@
     "ES6 classes",
     "classes"
   ],
-  "author": "Magnus Meseck",
-  "license": "MIT",
+  "main": "distribution/fusium.js",
+  "scripts": {
+    "dry-update": "tsc",
+    "patch": "tsc && npm version patch && git push && npm publish",
+    "release": "tsc && npm version minor && git push && npm publish",
+    "test": "unitium-tsx source"
+  },
   "devDependencies": {
     "@types/node": "^20.10.4",
     "unitium": "^0.3.2"
-  }
+  },
+  "type": "module",
+  "types": "./distribution/fusium.d.ts",
+  "module": "./distribution/fusium.js"
 }
