@@ -20,7 +20,6 @@
     "ES6 classes",
     "classes"
   ],
-  "main": "distribution/fusium.js",
   "scripts": {
     "dry-update": "tsc",
     "patch": "tsc && npm version patch && git push && npm publish",
@@ -32,6 +31,6 @@
     "unitium": "^0.3.2"
   },
   "type": "module",
-  "types": "./distribution/fusium.d.ts",
-  "module": "./distribution/fusium.js"
+  "exports": "./distribution/fusium.js",
+  "types": "./distribution/fusium.d.ts"
 }
