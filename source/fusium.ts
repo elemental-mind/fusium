@@ -3,8 +3,8 @@ import type { FusedClass, FusedConstructor } from "./types.js";
 //For gzip/bzip compression purposes we use array notation.
 let [currentPointer, currentChain, currentArgs, currentProtoCarrier]: [number, (new (arg?: any) => any)[] | null, any[] | null, (new (arg?: any) => any) | null] = [0, null, null, null];
 
-class Composable { };
-export const Trait = new Proxy(Composable, {
+class BaseComposable { };
+export const Trait = new Proxy(BaseComposable, {
     construct()
     {
         if (currentChain && currentPointer < currentChain.length)
@@ -13,6 +13,8 @@ export const Trait = new Proxy(Composable, {
             return Object.create(currentProtoCarrier!.prototype);
     }
 });
+
+export const Composable = Trait;
 
 export function CoTraits<T extends (new(arg?: any) => any)[]>(...classes: T): new () => FusedClass<T>
 {
@@ -56,7 +58,7 @@ export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): Fus
 function flattenPrototypeChain(prototype: any, chainAccumulator: any)
 {
     const parentPrototype = Object.getPrototypeOf(prototype);
-    if (prototype.constructor === Composable) return chainAccumulator;
+    if (prototype.constructor === BaseComposable) return chainAccumulator;
     if (parentPrototype === Object.prototype) throw new Error(`Fusium Error: Class ${prototype.constructor.name} does not derive from \`Trait\` or \`CoTraits(...)\`.`);
 
     flattenPrototypeChain(parentPrototype, chainAccumulator);
