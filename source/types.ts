@@ -7,7 +7,10 @@ type FusedConstructorParameterSet<Classes extends (abstract new (arg?: any) => a
 type WithoutOptionals<Tuple extends any[]> =
     [Tuple] extends [[infer CurrentTupleMember, ...infer FollowingTupleMembers]] ? Extract<CurrentTupleMember, undefined> extends never ? [CurrentTupleMember, ...WithoutOptionals<FollowingTupleMembers>] : [...WithoutOptionals<FollowingTupleMembers>] : [];
 
-type OptionalIfAllTupleMembersOptional<Tuple extends any[]> =
-    WithoutOptionals<Tuple> extends [] ? Tuple | undefined : Tuple;
+type ConstructorParamsOptional<Tuple extends any[]> =
+    WithoutOptionals<Tuple> extends [] ? true : false;
 
-export type FusedConstructor<Classes extends (abstract new (arg?: any) => any)[]> = new (args: OptionalIfAllTupleMembersOptional<FusedConstructorParameterSet<Classes>>) => FusedClass<Classes>;
+export type FusedConstructor<Classes extends (abstract new (arg?: any) => any)[]> = 
+    ConstructorParamsOptional<Classes> extends true ?
+    new (args?: FusedConstructorParameterSet<Classes>) => FusedClass<Classes>:
+    new (args: FusedConstructorParameterSet<Classes>) => FusedClass<Classes>;
