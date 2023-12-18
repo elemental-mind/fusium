@@ -5,12 +5,12 @@ let [currentPointer, currentChain, currentArgs, currentProtoCarrier]: [number, (
 
 class BaseComposable { };
 export const Trait = new Proxy(BaseComposable, {
-    construct()
+    construct(target, args, newTarget)
     {
         if (currentChain && currentPointer < currentChain.length)
             return Reflect.construct(currentChain[currentPointer], currentChain[currentPointer++].length ? [currentArgs!.pop()] : [], currentProtoCarrier!);
         else
-            return Object.create(currentProtoCarrier?.prototype ?? Object.prototype);
+            return Object.create(newTarget.prototype);
     }
 });
 
