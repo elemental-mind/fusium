@@ -62,9 +62,9 @@ function flattenPrototypeChain(prototype: any, chainAccumulator: any)
     if (parentPrototype === Object.prototype) throw new Error(`Fusium Error: Class ${prototype.constructor.name} does not derive from \`Trait\` or \`CoTraits(...)\`.`);
 
     flattenPrototypeChain(parentPrototype, chainAccumulator);
-    for (const [prop, value] of Object.entries(Object.getOwnPropertyDescriptors(prototype)))
-        if (prop !== "constructor")
-            Object.defineProperty(chainAccumulator, prop, value);
+
+    Object.defineProperties(chainAccumulator, Object.getOwnPropertyDescriptors(prototype));
+    delete chainAccumulator.constructor;
 
     return chainAccumulator;
 }
