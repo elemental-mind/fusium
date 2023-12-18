@@ -36,9 +36,10 @@ Fusium is just an npm install away:
 
 ## Usage Examples
 
-Here's a simple pseudo-code example taken from the concepts above of how to use Fusium to compose classes:
+Here's a simple pseudo-code example concretizing the concepts above to compose a `UIElement`:
 
 ```typescript
+import { Trait, CoTraits, FusionOf } from "fusium-js";
 
 // Define the UIElement as a Fusion/Composition of the traits
 // Not that UIElement does not contain any logic for wiring traits together as the traits
@@ -64,8 +65,7 @@ class Positioned extends Trait
 class Movable extends CoTraits(Positioned)   
 {
   move(dx: number, dy: number) {
-    this.x += dx;
-    this.y += dy;
+    this.setPosition(this.x + dx, this.y + dy);
   }
 }
 
