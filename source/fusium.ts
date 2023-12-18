@@ -5,12 +5,12 @@ let [currentPointer, currentChain, currentArgs, currentProtoCarrier]: [number, (
 
 class BaseComposable { };
 export const Trait = new Proxy(BaseComposable, {
-    construct(target, args, newTarget)
+    construct()
     {
         if (currentChain && currentPointer < currentChain.length)
             return Reflect.construct(currentChain[currentPointer], currentChain[currentPointer++].length ? [currentArgs!.pop()] : [], currentProtoCarrier!);
         else
-            return Object.create(currentProtoCarrier?.prototype ?? newTarget.prototype);
+            return Object.create(currentProtoCarrier?.prototype ?? Object.prototype);
     }
 });
 
@@ -31,7 +31,7 @@ export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): Fus
     return new Proxy(
         Fused,
         {
-            construct(target, args)
+            construct(target, args, newTarget)
             {
                 //We backup any old values as we might have nested constructor calls
                 //For gzip/bzip compression purposes we use array notation throught this function
@@ -39,7 +39,7 @@ export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): Fus
 
                 //We setup the module variables to represent the current construction process. 
                 //We reverse the args to be able to "pop" them - instead of unshifting (which is less efficient).
-                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args.reverse(), Fused as unknown as new (arg?: any) => any];
+                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args.reverse(), newTarget as unknown as new (arg?: any) => any];
 
                 //We construct the first class in the chain. 
                 //As the args array only contains parameters for classes with constructor args, we check if we need to supply any. If the constructor is parameterless (constructor.length === 0) we only supply an empty array.
