@@ -55,6 +55,22 @@ class DerivedRequired extends RequiredParameter
     public derivedRequired = "derived";
 }
 
+class TraitA extends Trait
+{
+    A(){}
+}
+
+class TraitB extends Trait
+{
+    B(){}
+}
+
+class FusedAB extends FusionOf(TraitA, TraitB)
+{}
+
+class TraitC extends CoTraits(TraitA, TraitB)
+{}
+
 //#endregion
 
 
@@ -73,5 +89,13 @@ export class RejectionTests
 
 export class InstanceTests
 {
-    
+    instanceHasAllMembers()
+    {
+
+    }
+
+    instanceMembersAreResolvedInCompositionOrder()
+    {
+
+    }
 }
