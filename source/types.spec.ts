@@ -9,33 +9,49 @@ class Parameterless extends Trait
 
 class OptionalParameter extends Trait
 {
+    public optional = true;
+
     constructor(optionalParameter?: {
-        argument: number
+        argument: number;
     })
     {
         super();
     }
-
-    public optional = true;
 }
 
 class RequiredParameter extends Trait
 {
+    public required = "yes";
+
     constructor(requiredParameter: {
-        argument: string
+        argument: string;
     })
     {
         super();
     }
-
-    public required = "yes";
 }
 
-class CheckFused extends FusionOf(Parameterless, OptionalParameter, RequiredParameter)
+class MultipleParameters extends Trait
+{
+    public start: number;
+    public end: number;
+
+    constructor(multiParameter: {
+        start: number,
+        end: number;
+    })
+    {
+        super();
+        this.start = multiParameter.start;
+        this.end = multiParameter.end;
+    }
+}
+
+class CheckFused extends FusionOf(Parameterless, OptionalParameter, RequiredParameter, MultipleParameters)
 {
     constructor()
     {
-        super([,{argument: "yes"}]);
+        super([, { argument: "yes" }, { start: 100, end: 200 }]);
     }
 
     checkIfMembersOnType()
@@ -43,6 +59,8 @@ class CheckFused extends FusionOf(Parameterless, OptionalParameter, RequiredPara
         this.optional = true;
         this.paraless = 100;
         this.required = "checked";
+        this.start = 100;
+        this.end = 200;
     }
 }
 
@@ -57,4 +75,29 @@ class CheckMemberTraitWithCoTraits extends CoTraits(RequiredParameter)
     {
         this.required = "checked";
     }
+}
+
+class TraitA extends Trait
+{
+    public a: string;
+}
+
+class TraitB extends CoTraits(TraitA)
+{
+    public b: string;
+}
+
+class TraitC extends CoTraits(TraitB)
+{
+    public c: string;
+
+    method()
+    {
+        this.a = this.b = this.c;
+    }
+}
+
+class TraitD extends FusionOf(TraitB, TraitA)
+{
+
 }
