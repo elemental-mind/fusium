@@ -3,7 +3,6 @@
 import { CoTraits, FusionOf, Trait } from "./fusium.js";
 import assert from "assert";
 
-
 //#region Test Objects
 
 class UnTraited
@@ -76,7 +75,7 @@ class TraitC extends CoTraits(TraitA, TraitB)
 
 export class RejectionTests
 {
-    ShouldRejectNonTraitsInFuse()
+    ShouldRejectNonTraitsInFusionOf()
     {
         assert.throws(() => FusionOf(UnTraited));
     }
@@ -84,6 +83,16 @@ export class RejectionTests
     CanAllowNonTraitsInCoTrait()
     {
         assert.doesNotThrow(() => CoTraits(UnTraited));
+    }
+
+    FusionOfTraitsAndCoTraitsIsPossible()
+    {
+        assert.doesNotThrow(() => FusionOf(TraitA, TraitB, TraitC));
+    }
+
+    FusionOfFusedObjectsIsPossible()
+    {
+        assert.doesNotThrow(() => FusionOf(FusedAB, TraitC));
     }
 }
 
