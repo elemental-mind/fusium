@@ -3,108 +3,110 @@
 import { CoTraits, FusionOf, Trait } from "./fusium.js";
 import assert from "assert";
 
+let testCache: string[];
+
 //#region Test Objects
-
-class UnTraited
-{
-    public untraited = {};
-}
-
-class Parameterless extends Trait
-{
-    public paraless = 0;
-}
-
-class DerivedParameterLess extends Parameterless
-{
-    public derivedParaless = 0;
-}
-
-class OptionalParameter extends Trait
-{
-    constructor(optionalParameter?: {
-        argument: number
-    })
-    {
-        super();
-    }
-
-    public optional = true;
-}
-
-class DerivedOptional extends OptionalParameter
-{
-    public derivedOptional = true;
-}
-
-class RequiredParameter extends Trait
-{
-    constructor(requiredParameter: {
-        argument: string
-    })
-    {
-        super();
-    }
-
-    public required = "yes";
-}
-
-class DerivedRequired extends RequiredParameter
-{
-    public derivedRequired = "derived";
-}
-
 class TraitA extends Trait
 {
-    A(){}
+    constructor()
+    {
+        super();
+        testCache.push("A");
+    }
+
+    A()
+    {
+        return "A";
+    }
 }
 
 class TraitB extends Trait
 {
-    B(){}
+    constructor()
+    {
+        super();
+        testCache.push("B");
+    }
+
+    B()
+    {
+        return "B";
+    }
+}
+
+class TraitC extends CoTraits(TraitA, TraitB)
+{
+    constructor()
+    {
+        super();
+        testCache.push("C");
+    }
+
+    C()
+    {
+        return `${this.A()} + ${this.B()} + C`;
+    };
 }
 
 class FusedAB extends FusionOf(TraitA, TraitB)
-{}
+{
+    constructor()
+    {
+        super([]);
+        testCache.push("AB");
+    }
 
-class TraitC extends CoTraits(TraitA, TraitB)
-{}
+    A()
+    {
+        return "AB.A";
+    }
+
+    AB()
+    {
+        return "AB";
+    }
+}
 
 //#endregion
 
+//#region BaseClassTests
 
-export class RejectionTests
+export class FusionTests
 {
-    ShouldRejectNonTraitsInFusionOf()
+    ConstructorsAreCalledInOrder()
     {
-        assert.throws(() => FusionOf(UnTraited));
+        const CombinedClass = FusionOf(TraitA, TraitB, TraitC);
+
+        testCache = [];
+        const instance = new CombinedClass([]);
+
+        assert.deepEqual(testCache, ["C", "B", "A"]);
     }
 
-    CanAllowNonTraitsInCoTrait()
+    FusionOfTraitsAndCotraitsIsPossible()
     {
-        assert.doesNotThrow(() => CoTraits(UnTraited));
+        const CombinedClass = FusionOf(TraitA, TraitB, TraitC);
+        const instance = new CombinedClass([]);
+
+        assert(instance.A() === "A");
+        assert(instance.B() === "B");
+        assert(instance.C() === "A + B + C");
     }
 
-    FusionOfTraitsAndCoTraitsIsPossible()
+    OverwritingOfTraitMembersIsPossible()
     {
-        assert.doesNotThrow(() => FusionOf(TraitA, TraitB, TraitC));
+        const instance = new FusedAB();
+        
+        assert(instance.A() === "AB.A");
+        assert(instance.AB() === "AB");
     }
 
     FusionOfFusedObjectsIsPossible()
     {
-        assert.doesNotThrow(() => FusionOf(FusedAB, TraitC));
-    }
-}
+        testCache = [];
+        const CombinedClass = FusionOf(FusedAB, TraitC);
+        new CombinedClass([]);
 
-export class InstanceTests
-{
-    instanceHasAllMembers()
-    {
-
-    }
-
-    instanceMembersAreResolvedInCompositionOrder()
-    {
-
+        assert.deepEqual(testCache, ["B", "A", "AB"]);
     }
 }

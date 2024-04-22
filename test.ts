@@ -1,7 +1,11 @@
-import { RejectionTests } from "./source/fusium.spec.ts";
+import { FusionTests } from "./source/fusium.spec.ts";
 
-const testClass = new RejectionTests();
+const testClass = new FusionTests();
+
+testClass.ConstructorsAreCalledInOrder();
 
 testClass.FusionOfTraitsAndCoTraitsIsPossible();
 
-testClass.FusionOfFusedObjectsIsPossible();
+testClass.FusionOfFusedObjectsIsPossible()
+
+console.log("All tests passed");

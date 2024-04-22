@@ -23,11 +23,14 @@ export function CoTraits<T extends (new(arg?: any) => any)[]>(...classes: T): ne
 
 export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): FusedConstructor<T>
 {
+
     //We use this as our almost meaningless constructor function carrier down the constructor chain to carry the prototype for us.
     function Fused() { };
     //We go down the prototype chain of each supplied class and consolidate all functions/members of all the supplied classes into one single prototype and attach it to Joined. It will become the prototype of our constructed instances.
-    Fused.prototype = classes.reduceRight((previous, current) => flattenPrototypeChain(current.prototype, previous), {});;
+    Fused.prototype = classes.reduceRight((previous, current) => flattenPrototypeChain(current.prototype, previous), Object.create(Trait.prototype));
 
+    //Despite a consolidated prototype chain, we want all the constructors of the composing classes to be called in order. Hence we intercept the construction of the fused class with a proxy
+    //to run each classes constrcutor function.
     return new Proxy(
         Fused,
         {
@@ -57,8 +60,9 @@ export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): Fus
 
 function flattenPrototypeChain(prototype: any, chainAccumulator: any)
 {
-    const parentPrototype = Object.getPrototypeOf(prototype);
     if (prototype.constructor === BaseComposable) return chainAccumulator;
+    
+    const parentPrototype = Object.getPrototypeOf(prototype);
     if (parentPrototype === Object.prototype) throw new Error(`Fusium Error: Class ${prototype.constructor.name} does not derive from \`Trait\` or \`CoTraits(...)\`.`);
 
     flattenPrototypeChain(parentPrototype, chainAccumulator);
