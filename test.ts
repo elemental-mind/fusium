@@ -4,7 +4,7 @@ const testClass = new FusionTests();
 
 testClass.ConstructorsAreCalledInOrder();
 
-testClass.FusionOfTraitsAndCoTraitsIsPossible();
+testClass.FusionOfTraitsAndCotraitsIsPossible();
 
 testClass.FusionOfFusedObjectsIsPossible()
 
