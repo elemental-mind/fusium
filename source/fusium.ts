@@ -42,7 +42,7 @@ export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): Fus
 
                 //We setup the module variables to represent the current construction process. 
                 //We reverse the args to be able to "pop" them - instead of unshifting (which is less efficient).
-                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args.reverse(), newTarget as unknown as new (arg?: any) => any];
+                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args[0]?.reverse() ?? [], newTarget as unknown as new (arg?: any) => any];
 
                 //We construct the first class in the chain. 
                 //As the args array only contains parameters for classes with constructor args, we check if we need to supply any. If the constructor is parameterless (constructor.length === 0) we only supply an empty array.
