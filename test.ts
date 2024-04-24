@@ -1,11 +1,16 @@
-import { FusionTests } from "./source/fusium.spec.ts";
+import { FusionTests, InstantiationTests } from "./source/fusium.spec.ts";
 
-const testClass = new FusionTests();
+const fusionTests = new FusionTests();
 
-testClass.ConstructorsAreCalledInOrder();
+fusionTests.FusionOfTraitsAndCotraitsIsPossible();
+fusionTests.FusionOfFusedObjectsIsPossible();
+fusionTests.OverwritingOfTraitMembersIsPossible();
 
-testClass.FusionOfTraitsAndCotraitsIsPossible();
+const instantiationTests = new InstantiationTests();
 
-testClass.FusionOfFusedObjectsIsPossible()
+instantiationTests.ConstructorsAreCalledInOrder();
+instantiationTests.ConstructorParametersAreOptionalWhenAllTraitsHaveOptionalParameters();
+instantiationTests.ConstructorParametersAreRequiredWhenAtLeastOneTraitHasRequiredParameters();
+instantiationTests.ConstructorParametersAreRequiredWhenAtLeastOneTraitHasRequiredParameters();
 
 console.log("All tests passed");
