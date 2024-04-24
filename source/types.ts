@@ -17,24 +17,27 @@ type ConstructParamsOf<T extends any[]> = {
     [K in keyof T]: ConstructorParameters<T[K]>;
 };
 
-type AllOptional <T extends any[][]> = {
+//We need an additional check for empty parameter arrays
+type AllOptional<T extends any[][]> = {
     [K in keyof T]: 
         T[K] extends [] ?
             true:
             AllTupleMembersIncludeType<T[K], undefined>
 };
 
-type AllTupleMembersExtendType<Tuple extends any[], ConditionType> =
+//This is matching in addiditive types of tuple members: [(string & number), number] extends number in all members
+type AllTupleMembersExtendType<Tuple extends any[], ExtendedType> =
     Tuple extends [infer First, ...infer Rest] ?
-    First extends ConditionType ?
-        AllTupleMembersExtendType<Rest, ConditionType>
+    First extends ExtendedType ?
+        AllTupleMembersExtendType<Rest, ExtendedType>
         : false
     : true;
 
-type AllTupleMembersIncludeType<Tuple extends any[], ConditionType> =
+//This is matching in intersection types of tuple members: [(string | number | undefined), undefined] includes undefined in all members
+type AllTupleMembersIncludeType<Tuple extends any[], IncludedType> =
     Tuple extends [infer First, ...infer Rest] ?
-    ConditionType extends First ?
-        AllTupleMembersIncludeType<Rest, ConditionType>
+    IncludedType extends First ?
+        AllTupleMembersIncludeType<Rest, IncludedType>
         : false
     : true;
 
