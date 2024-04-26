@@ -1,4 +1,4 @@
-import { FusionTests, InstantiationTests } from "./source/fusium.spec.ts";
+import { FusionTests, InstanceOfTests, InstantiationTests } from "./source/fusium.spec.ts";
 
 const fusionTests = new FusionTests();
 
@@ -12,5 +12,17 @@ instantiationTests.ConstructorsAreCalledInOrder();
 instantiationTests.ConstructorParametersAreOptionalWhenAllTraitsHaveOptionalParameters();
 instantiationTests.ConstructorParametersAreRequiredWhenAtLeastOneTraitHasRequiredParameters();
 instantiationTests.ConstructorParametersAreRequiredWhenAtLeastOneTraitHasRequiredParameters();
+
+const instanceOfTests = new InstanceOfTests();
+
+instanceOfTests.Traits()
+instanceOfTests.DerivativeOfTrait()
+instanceOfTests.DeepDerivativeOfTrait();
+
+instanceOfTests.SimpleFusionOf();
+instanceOfTests.NestedFusionOf();
+
+instanceOfTests.DerivativeOfFusion();
+instanceOfTests.DeepDerivativeOfFusion();
 
 console.log("All tests passed");

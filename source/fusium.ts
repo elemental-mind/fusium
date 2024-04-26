@@ -3,7 +3,11 @@ import type { FusedClass, FusedConstructor } from "./types.js";
 //For gzip/bzip compression purposes we use array notation.
 let [currentPointer, currentChain, currentArgs, currentProtoCarrier]: [number, (new (arg?: any) => any)[] | null, any[] | null, (new (arg?: any) => any) | null] = [0, null, null, null];
 
-class BaseComposable { };
+class BaseComposable
+{
+    static [Symbol.hasInstance] = instanceOfCheck;
+};
+
 export const Trait = new Proxy(BaseComposable, {
     construct(target, args, newTarget)
     {
@@ -14,27 +18,36 @@ export const Trait = new Proxy(BaseComposable, {
     }
 });
 
-export const Composable = Trait;
-
-export function CoTraits<T extends (new(arg?: any) => any)[]>(...classes: T): new () => FusedClass<T>
+export function CoTraits<T extends (new (arg?: any) => any)[]>(...classes: T): new () => FusedClass<T>
 {
     return Trait as unknown as new () => FusedClass<T>;
 }
 
-export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): FusedConstructor<T>
+export function FusionOf<T extends (new (arg?: any) => any)[]>(...classes: T): FusedConstructor<T>
 {
+    //For debugging it's nice to have a named function to decern different Fusions. Hence this extra step, that could be skipped for efficiency.
+    const funcNamer = new Function(`return function FusionOf_${classes.map(clss => clss.name).join("_")}(){};`);
 
     //We use this as our almost meaningless constructor function carrier down the constructor chain to carry the prototype for us.
-    function Fused() { };
+    const Fused = funcNamer() as unknown as Function & {
+        prototype: any,
+        fusion: Set<any>;
+    };
+
     //We go down the prototype chain of each supplied class and consolidate all functions/members of all the supplied classes into one single prototype and attach it to Joined. It will become the prototype of our constructed instances.
     Fused.prototype = classes.reduceRight((previous, current) => flattenPrototypeChain(current.prototype, previous), Object.create(Trait.prototype));
+    Object.defineProperty(Fused.prototype, "constructor", { enumerable: false, value: Fused });
+
+    //We follow the whole prototype chain of each object
+    Fused.fusion = classes.reduceRight((previous, current) => extractPrototypeChainMembers(current, previous), new Set());
+    Object.defineProperty(Fused, Symbol.hasInstance, { value: instanceOfCheck });
 
     //Despite a consolidated prototype chain, we want all the constructors of the composing classes to be called in order. Hence we intercept the construction of the fused class with a proxy
     //to run each classes constrcutor function.
-    return new Proxy(
+    const ShadowedFusion = new Proxy(
         Fused,
         {
-            construct(target, args, newTarget)
+            construct(target: any, args: any[], newTarget: any)
             {
                 //We backup any old values as we might have nested constructor calls
                 //For gzip/bzip compression purposes we use array notation throught this function
@@ -56,19 +69,67 @@ export function FusionOf<T extends(new(arg?: any) => any)[]>(...classes: T): Fus
                 return instance;
             }
         }) as unknown as FusedConstructor<T>;
+
+    Fused.fusion.add(Fused);
+    Fused.fusion.add(ShadowedFusion);
+
+    return ShadowedFusion;
 }
 
 function flattenPrototypeChain(prototype: any, chainAccumulator: any)
 {
     if (prototype.constructor === BaseComposable) return chainAccumulator;
-    
+
     const parentPrototype = Object.getPrototypeOf(prototype);
     if (parentPrototype === Object.prototype) throw new Error(`Fusium Error: Class ${prototype.constructor.name} does not derive from \`Trait\` or \`CoTraits(...)\`.`);
 
     flattenPrototypeChain(parentPrototype, chainAccumulator);
 
     Object.defineProperties(chainAccumulator, Object.getOwnPropertyDescriptors(prototype));
-    delete chainAccumulator.constructor;
 
     return chainAccumulator;
+}
+
+function extractPrototypeChainMembers(clss: any, memberSet: Set<any>)
+{
+    if (clss.constructor === BaseComposable)
+    {
+        return memberSet;
+    }
+    else if (clss.fusion)
+    {
+        for (const member of clss.fusion)
+            memberSet.add(member);
+    }
+    else
+    {
+        memberSet.add(clss);
+        extractPrototypeChainMembers(Object.getPrototypeOf(clss.prototype), memberSet);
+    }
+
+    return memberSet;
+}
+
+function instanceOfCheck(this: Function & { fusion?: Set<any>; }, instance: any): boolean
+{
+    //We need to descend the prototype chain of the instance until we either hit
+    //- null
+    //- The desired constructor in the prototype chain
+    //- A fusion => In that case, we can simply see if the desired constructor is in the fusion set
+    const instancePrototype = Object.getPrototypeOf(instance);
+    
+    if(instancePrototype === null)
+        return false;
+
+    //Prototype is fusion
+    if (Object.hasOwn(instancePrototype.constructor, "fusion"))
+        //Check if "this" is part of the Fusion
+        return instancePrototype.constructor.fusion.has(this);
+    //Prototype is a normal class prototype, hence we imitate the normal instanceof behaviour
+    else
+        if (instancePrototype === this.prototype)
+            return true;
+        else
+            //We descend further down the prototype chain of the instance
+            return instanceOfCheck.call(this, instancePrototype);
 }

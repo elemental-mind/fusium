@@ -4,7 +4,6 @@ import { FusionOf } from "./fusium.ts";
 import { inspector as inheritanceInspector, FusedAB, TraitA, TraitB, TraitC } from "./test-helpers/inheritance.ts";
 import { MultipleParameters, OptionalParameter, Parameterless, RequiredParameter, inspector as instantiationInspector } from "./test-helpers/instantiation.ts";
 
-
 export class FusionTests
 {
     FusionOfTraitsAndCotraitsIsPossible()
@@ -43,7 +42,7 @@ export class InstantiationTests
 
         inheritanceInspector.testCache = [];
         const instance = new CombinedClass();
-        
+
         assert.deepEqual(inheritanceInspector.testCache, ["A", "B", "C"]);
     }
 
@@ -95,5 +94,108 @@ export class InstantiationTests
             //undefined is expected here as we are dealing with an optional value. If the constructor's length property is greater 0 it will get a value supplied.
             [undefined]
         ]);
+    }
+}
+
+export class InstanceOfTests
+{
+    Traits()
+    {
+        const traitInstance = new TraitA();
+
+        assert(traitInstance instanceof TraitA);
+        assert(!(traitInstance instanceof TraitB));
+    }
+
+    DerivativeOfTrait()
+    {
+        class DerivedFromTraitA extends TraitA
+        {
+            additionalMethod() { }
+        }
+
+        const derivedInstance = new DerivedFromTraitA();
+
+        assert(derivedInstance instanceof DerivedFromTraitA);
+        assert(derivedInstance instanceof TraitA);
+    }
+
+    DeepDerivativeOfTrait()
+    {
+        class DerivedFromTraitA extends TraitA
+        {
+            additionalMethod() { }
+        }
+
+        class MoreDeeplyDerived extends DerivedFromTraitA
+        {
+            evenMoreAdditionalMethod() { }
+        }
+
+        const moreDeeplyDerivedInstance = new MoreDeeplyDerived();
+
+        assert(moreDeeplyDerivedInstance instanceof MoreDeeplyDerived);
+        assert(moreDeeplyDerivedInstance instanceof DerivedFromTraitA);
+        assert(moreDeeplyDerivedInstance instanceof TraitA);
+    }
+
+    SimpleFusionOf()
+    {
+        const CombinedClass = FusionOf(TraitA, TraitB);
+
+        const instance = new CombinedClass();
+
+        assert(instance instanceof CombinedClass);
+        assert(instance instanceof TraitA);
+        assert(instance instanceof TraitB);
+    }
+
+    NestedFusionOf()
+    {
+        const FirstLevelFusion = FusionOf(TraitA, TraitB);
+        const NestedCombinedClass = FusionOf(FirstLevelFusion, TraitC);
+        const instance = new NestedCombinedClass();
+
+        assert(instance instanceof NestedCombinedClass);
+        assert(instance instanceof FirstLevelFusion);
+        assert(instance instanceof TraitA);
+        assert(instance instanceof TraitB);
+        assert(instance instanceof TraitC);
+    }
+
+    DerivativeOfFusion()
+    {
+        const FirstLevelFusion = FusionOf(TraitA, TraitB);
+
+        class Test extends FirstLevelFusion
+        {
+            testFunction()
+            {
+
+            }
+        }
+
+        const instance = new Test();
+
+        assert(instance instanceof Test);
+        assert(instance instanceof FirstLevelFusion);
+        assert(instance instanceof TraitA);
+        assert(instance instanceof TraitB);
+    }
+
+    DeepDerivativeOfFusion()
+    {
+        const FirstLevelFusion = FusionOf(TraitA, TraitB);
+
+        class Test extends FirstLevelFusion { }
+        class NestedTest extends Test { };
+
+        const instance = new NestedTest();
+
+        assert(instance instanceof NestedTest);
+        assert(instance instanceof Test);
+        assert(instance instanceof FirstLevelFusion);
+        assert(instance instanceof TraitA);
+        assert(instance instanceof TraitB);
     }
 }
