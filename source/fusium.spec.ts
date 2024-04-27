@@ -1,6 +1,6 @@
 import assert from "assert";
 
-import { FusionOf } from "./fusium.ts";
+import { FusionOf, Trait } from "./fusium.ts";
 import { inspector as inheritanceInspector, FusedAB, TraitA, TraitB, TraitC } from "./test-helpers/inheritance.ts";
 import { MultipleParameters, OptionalParameter, Parameterless, RequiredParameter, inspector as instantiationInspector } from "./test-helpers/instantiation.ts";
 
@@ -31,6 +31,24 @@ export class FusionTests
         new CombinedClass();
 
         assert.deepEqual(inheritanceInspector.testCache, ["AB", "A", "B"]);
+    }
+
+    FusionOfDeeplyDerivedTraitsIsPossible()
+    {
+        class A extends Trait 
+        {
+            a() { }
+        }
+
+        class B extends A
+        {
+            b() { }
+        }
+
+        class Combined extends FusionOf(A, B, TraitC)
+        {
+
+        }
     }
 }
 

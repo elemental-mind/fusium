@@ -92,19 +92,18 @@ function flattenPrototypeChain(prototype: any, chainAccumulator: any)
 
 function extractPrototypeChainMembers(clss: any, memberSet: Set<any>)
 {
-    if (clss.constructor === BaseComposable)
+    if (clss !== Trait)
     {
-        return memberSet;
-    }
-    else if (clss.fusion)
-    {
-        for (const member of clss.fusion)
-            memberSet.add(member);
-    }
-    else
-    {
-        memberSet.add(clss);
-        extractPrototypeChainMembers(Object.getPrototypeOf(clss.prototype), memberSet);
+        if (Object.hasOwn(clss, "fusion"))
+        {
+            for (const member of clss.fusion)
+                memberSet.add(member);
+        }
+        else
+        {
+            memberSet.add(clss);
+            extractPrototypeChainMembers(Object.getPrototypeOf(clss), memberSet);
+        }
     }
 
     return memberSet;
@@ -117,8 +116,8 @@ function instanceOfCheck(this: Function & { fusion?: Set<any>; }, instance: any)
     //- The desired constructor in the prototype chain
     //- A fusion => In that case, we can simply see if the desired constructor is in the fusion set
     const instancePrototype = Object.getPrototypeOf(instance);
-    
-    if(instancePrototype === null)
+
+    if (instancePrototype === null)
         return false;
 
     //Prototype is fusion

@@ -5,6 +5,7 @@ const fusionTests = new FusionTests();
 fusionTests.FusionOfTraitsAndCotraitsIsPossible();
 fusionTests.FusionOfFusedObjectsIsPossible();
 fusionTests.OverwritingOfTraitMembersIsPossible();
+fusionTests.FusionOfDeeplyDerivedTraitsIsPossible();
 
 const instantiationTests = new InstantiationTests();
 
