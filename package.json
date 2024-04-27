@@ -1,6 +1,6 @@
 {
   "name": "fusium-js",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Magnus Meseck",
   "license": "MIT",
   "description": "A tiny class-based composition/mixin library",
