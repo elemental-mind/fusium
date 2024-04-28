@@ -11,9 +11,9 @@ class OptionalParameter extends Trait
 {
     public optional = true;
 
-    constructor(optionalParameter?: {
-        argument: number;
-    })
+    constructor(
+        argument?: number
+    )
     {
         super();
     }
@@ -23,9 +23,9 @@ class RequiredParameter extends Trait
 {
     public required = "yes";
 
-    constructor(requiredParameter: {
-        argument: string;
-    })
+    constructor(
+        argument: string
+    )
     {
         super();
     }
@@ -33,25 +33,20 @@ class RequiredParameter extends Trait
 
 class MultipleParameters extends Trait
 {
-    public start: number;
-    public end: number;
-
-    constructor(multiParameter: {
-        start: number,
-        end: number;
-    })
+    constructor(
+        public start: number,
+        public end: number
+    )
     {
         super();
-        this.start = multiParameter.start;
-        this.end = multiParameter.end;
     }
 }
 
-class CheckFused extends FusionOf(Parameterless, OptionalParameter, RequiredParameter, MultipleParameters)
+class CheckFused extends FusionOf(RequiredParameter, MultipleParameters, OptionalParameter, Parameterless)
 {
     constructor()
     {
-        super([, { argument: "yes" }, { start: 100, end: 200 }]);
+        super(["yes"], [100, 200]);
     }
 
     checkIfMembersOnType()

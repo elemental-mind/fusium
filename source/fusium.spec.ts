@@ -88,10 +88,11 @@ export class InstantiationTests
 
         const CombinedClass = FusionOf(OptionalParameter, Parameterless, RequiredParameter);
 
-        const instance = new CombinedClass([
-            { optional: 123 },
-            { required: "delivered" }
-        ]);
+        type ConstructorName<T> = T["constructor"]["name"];
+
+        type something = ConstructorName<OptionalParameter>
+
+        const instance = new CombinedClass([{ optional: 123 }, , { required: "delivered" }]);
 
         assert.deepStrictEqual(instantiationInspector.testCache, [
             [{ optional: 123 }],
