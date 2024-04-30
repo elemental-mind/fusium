@@ -1,5 +1,6 @@
 import type { Constructor, FusedClass, FusedConstructor } from "./types.js";
 
+const fusionFrames: [number, Constructor[], any[], Constructor][] = [];
 //For gzip/bzip compression purposes we use array notation.
 let [currentPointer, currentChain, currentArgs, currentProtoCarrier]: [number, Constructor[] | null, any[] | null, Constructor | null] = [0, null, null, null];
 
@@ -11,10 +12,32 @@ class BaseComposable
 export const Trait = new Proxy(BaseComposable, {
     construct(target, args, newTarget)
     {
-        if (currentChain && currentPointer < currentChain.length)
-            return Reflect.construct(currentChain[currentPointer++], currentArgs!.pop() ?? [], currentProtoCarrier!);
+        if (currentChain === null)
+            //This case is just a normal instantiation of the Trait (or a subclass of it) directly, without being part of a Fusion.
+            return Reflect.construct(target, args, newTarget);
         else
-            return Object.create(newTarget.prototype);
+        {
+            //When we arrive here, though, we are in the process of the instantiation of a Fusion.
+            //We need to check, if we arrived at the end of the current trait chain
+            while (currentPointer === currentChain.length)
+            {
+                //If we arrived at the end of the current trait chain, we need to see, whether it was just a nested trait chain, because if so, we need to continue with the original trait chain.
+                if (fusionFrames.length > 0)
+                {
+                    //We are done with calling all constructors of a Fusion. We pop the stack and check again (through going back through the while) whether the popped stack frame is also done.
+                    [currentPointer, currentChain, currentArgs, currentProtoCarrier] = fusionFrames.pop()!;
+                }
+                else
+                {
+                    //We have arrived here, because we have arrived at the end of the trait chain and no nested trait chains are left. We hence need to create our instance.
+                    const instance = Object.create(currentProtoCarrier!.prototype);
+                    [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, null, null, null];
+                    return instance;
+                }
+            }
+
+            return Reflect.construct(currentChain![currentPointer++], currentArgs!.shift() ?? [], currentProtoCarrier!);
+        }
     }
 });
 
@@ -43,30 +66,21 @@ export function FusionOf<T extends Constructor[]>(...classes: T): FusedConstruct
     Object.defineProperty(Fused, Symbol.hasInstance, { value: instanceOfCheck });
 
     //Despite a consolidated prototype chain, we want all the constructors of the composing classes to be called in order. Hence we intercept the construction of the fused class with a proxy
-    //to run each classes constrcutor function.
+    //to run each classes' constructor function.
     const FusedInterceptor = new Proxy(
         Fused,
         {
             construct(target: any, args: any[], newTarget: any)
             {
-                //We backup any old values as we might have nested constructor calls
-                //For gzip/bzip compression purposes we use array notation throught this function
-                const [oldPointer, oldChain, oldArgs, oldProtoCarrier] = [currentPointer, currentChain, currentArgs, currentProtoCarrier];
+                //We check whether we are in a nested Fusion constrcutor call
+                if (currentChain !== null)
+                    //We feed the buffer as we have a nested Fusion constructor call
+                    fusionFrames.push([currentPointer, currentChain, currentArgs!, currentProtoCarrier!]);
 
                 //We setup the module variables to represent the current construction process. 
-                //We reverse the args to be able to "pop" them - instead of unshifting (which is less efficient).
-                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args?.reverse() ?? [], newTarget as unknown as new (arg?: any) => any];
+                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args ?? [], newTarget as unknown as new (arg?: any) => any];
 
-                //We construct the first class in the chain. 
-                //As the args array only contains parameters for classes with constructor args, we check if we need to supply any. If the constructor is parameterless (constructor.length === 0) we only supply an empty array.
-                //As arguments are evaled left to right, we increment the pointer in the last position that we need it, to keep it at the current value throughout this construct call.
-                //For gzip/bzip compression purposes we keep the call string the same as within the composable proxy handler down below. Hence the use of "currentPointer" instead of "0";
-                const instance = Reflect.construct(currentChain[currentPointer++], currentArgs!.pop() ?? [], currentProtoCarrier);
-
-                //We restore the state before this potentially nested constructor call
-                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [oldPointer, oldChain, oldArgs, oldProtoCarrier];
-
-                return instance;
+                return Reflect.construct(currentChain![currentPointer++], currentArgs!.shift() ?? [], currentProtoCarrier!);
             }
         }) as unknown as FusedConstructor<T>;
 
