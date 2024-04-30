@@ -2,6 +2,8 @@
 
 import { Trait, CoTraits, FusionOf } from "./fusium.js";
 
+//Base classes
+
 class Parameterless extends Trait
 {
     public paraless = 0;
@@ -21,10 +23,19 @@ class OptionalParameter extends Trait
 
 class RequiredParameter extends Trait
 {
-    public required = "yes";
-
     constructor(
-        argument: string
+        public required: string
+    )
+    {
+        super();
+    }
+}
+
+class PartiallyRequired extends Trait
+{
+    constructor(
+        public required: string,
+        public optional?: number 
     )
     {
         super();
@@ -39,36 +50,6 @@ class MultipleParameters extends Trait
     )
     {
         super();
-    }
-}
-
-class CheckFused extends FusionOf(RequiredParameter, MultipleParameters, OptionalParameter, Parameterless)
-{
-    constructor()
-    {
-        super(["yes"], [100, 200]);
-    }
-
-    checkIfMembersOnType()
-    {
-        this.optional = true;
-        this.paraless = 100;
-        this.required = "checked";
-        this.start = 100;
-        this.end = 200;
-    }
-}
-
-class CheckMemberTraitWithCoTraits extends CoTraits(RequiredParameter)
-{
-    constructor()
-    {
-        super();
-    }
-
-    checkIfMembersOnType()
-    {
-        this.required = "checked";
     }
 }
 
@@ -95,4 +76,51 @@ class TraitC extends CoTraits(TraitB)
 class TraitD extends FusionOf(TraitB, TraitA)
 {
 
+}
+
+//Test cases
+
+class CheckFused extends FusionOf(RequiredParameter, MultipleParameters, OptionalParameter, Parameterless)
+{
+    checkIfMembersOnType()
+    {
+        this.optional = true;
+        this.paraless = 100;
+        this.required = "checked";
+        this.start = 100;
+        this.end = 200;
+    }
+}
+
+class CheckMemberTraitWithCoTraits extends CoTraits(RequiredParameter)
+{
+    constructor()
+    {
+        super();
+    }
+
+    checkIfMembersOnType()
+    {
+        this.required = "checked";
+    }
+}
+
+function checkParameterOptionalisation()
+{
+    const FusedType = FusionOf(Parameterless, OptionalParameter, RequiredParameter, MultipleParameters);
+
+    const permitsEmptyArrays = new FusedType([], [], ["string"], [100,200]);
+    const permitsUndefined = new FusedType(undefined, undefined, ["string"], [100, 200]);
+
+    const OptionalsOnEnd = FusionOf(RequiredParameter, OptionalParameter, Parameterless);
+
+    const permitsOmissionOfParameterArrays = new OptionalsOnEnd(["string"]);
+
+    const OnlyOptionals = FusionOf(OptionalParameter, Parameterless);
+
+    const permitsOmissionOfAllParameters = new OnlyOptionals();
+
+    const WithPartiallyOptional = FusionOf(OptionalParameter, PartiallyRequired);
+
+    const permitsOmissionOfConstrcutorOptionals = new WithPartiallyOptional([], ["test"]);
 }

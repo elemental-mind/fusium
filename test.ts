@@ -10,8 +10,8 @@ fusionTests.FusionOfDeeplyDerivedTraitsIsPossible();
 const instantiationTests = new InstantiationTests();
 
 instantiationTests.ConstructorsAreCalledInOrder();
+instantiationTests.ConstructorParametersArePassedCorrectly();
 instantiationTests.ConstructorParametersAreOptionalWhenAllTraitsHaveOptionalParameters();
-instantiationTests.ConstructorParametersAreRequiredWhenAtLeastOneTraitHasRequiredParameters();
 instantiationTests.ConstructorParametersAreRequiredWhenAtLeastOneTraitHasRequiredParameters();
 
 const instanceOfTests = new InstanceOfTests();

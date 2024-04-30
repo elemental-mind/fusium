@@ -1,6 +1,7 @@
 export type Constructor = abstract new (...args: any) => any;
 
-export type FusedConstructor<Classes extends Constructor[]> = new (...args: FusedConstructorParameterSet<Classes>) => FusedClass<Classes>;
+//@ts-ignore
+export type FusedConstructor<Classes extends Constructor[]> = new (...args: Optionalized<FusedConstructorParameterSet<Classes>>) => FusedClass<Classes>;
 
 export type FusedClass<Classes extends any[]> =
     Classes extends ([infer CurrentClass extends Constructor, ...infer FollowingClasses]) ? (InstanceType<CurrentClass> & FusedClass<FollowingClasses>) : unknown;
@@ -14,6 +15,7 @@ type FusedConstructorParameterSet<Classes extends Constructor[]> =
     ) ?
     [
         AllTupleMembersIncludeType<ConstructorParameters<CurrentClass>, undefined> extends true ? ConstructorParameters<CurrentClass> | undefined : ConstructorParameters<CurrentClass>,
+        //@ts-ignore
         ...Optionalized<FusedConstructorParameterSet<FollowingClasses>>
     ] :
     [];
@@ -21,7 +23,7 @@ type FusedConstructorParameterSet<Classes extends Constructor[]> =
 type Optionalized<T extends any[]> = 
     AllTupleMembersIncludeType<T, undefined> extends true ? 
         MakeAllOptional<T>:
-        T;
+        T; 
 
 type MakeAllOptional<T extends any[]> =
     {

@@ -12,7 +12,7 @@ export const Trait = new Proxy(BaseComposable, {
     construct(target, args, newTarget)
     {
         if (currentChain && currentPointer < currentChain.length)
-            return Reflect.construct(currentChain[currentPointer++], [currentArgs!.pop()], currentProtoCarrier!);
+            return Reflect.construct(currentChain[currentPointer++], currentArgs!.pop() ?? [], currentProtoCarrier!);
         else
             return Object.create(newTarget.prototype);
     }
@@ -55,13 +55,13 @@ export function FusionOf<T extends Constructor[]>(...classes: T): FusedConstruct
 
                 //We setup the module variables to represent the current construction process. 
                 //We reverse the args to be able to "pop" them - instead of unshifting (which is less efficient).
-                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args[0]?.reverse() ?? [], newTarget as unknown as new (arg?: any) => any];
+                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args?.reverse() ?? [], newTarget as unknown as new (arg?: any) => any];
 
                 //We construct the first class in the chain. 
                 //As the args array only contains parameters for classes with constructor args, we check if we need to supply any. If the constructor is parameterless (constructor.length === 0) we only supply an empty array.
                 //As arguments are evaled left to right, we increment the pointer in the last position that we need it, to keep it at the current value throughout this construct call.
                 //For gzip/bzip compression purposes we keep the call string the same as within the composable proxy handler down below. Hence the use of "currentPointer" instead of "0";
-                const instance = Reflect.construct(currentChain[currentPointer++], [currentArgs!.pop()], currentProtoCarrier);
+                const instance = Reflect.construct(currentChain[currentPointer++], currentArgs!.pop() ?? [], currentProtoCarrier);
 
                 //We restore the state before this potentially nested constructor call
                 [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [oldPointer, oldChain, oldArgs, oldProtoCarrier];
