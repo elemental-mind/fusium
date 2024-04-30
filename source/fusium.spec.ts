@@ -30,7 +30,7 @@ export class FusionTests
         const CombinedClass = FusionOf(FusedAB, TraitC);
         new CombinedClass();
 
-        assert.deepEqual(inheritanceInspector.testCache, ["AB", "A", "B"]);
+        assert.deepEqual(inheritanceInspector.testCache, ["AB", "A", "B", "C"]);
     }
 
     FusionOfDeeplyDerivedTraitsIsPossible()
