@@ -1,7 +1,7 @@
-import type { FusedClass, FusedConstructor } from "./types.js";
+import type { Constructor, FusedClass, FusedConstructor } from "./types.js";
 
 //For gzip/bzip compression purposes we use array notation.
-let [currentPointer, currentChain, currentArgs, currentProtoCarrier]: [number, (new (arg?: any) => any)[] | null, any[] | null, (new (arg?: any) => any) | null] = [0, null, null, null];
+let [currentPointer, currentChain, currentArgs, currentProtoCarrier]: [number, Constructor[] | null, any[] | null, Constructor | null] = [0, null, null, null];
 
 class BaseComposable
 {
@@ -12,18 +12,18 @@ export const Trait = new Proxy(BaseComposable, {
     construct(target, args, newTarget)
     {
         if (currentChain && currentPointer < currentChain.length)
-            return Reflect.construct(currentChain[currentPointer], currentChain[currentPointer++].length ? [currentArgs!.pop()] : [], currentProtoCarrier!);
+            return Reflect.construct(currentChain[currentPointer++], currentArgs!.pop() ?? [], currentProtoCarrier!);
         else
             return Object.create(newTarget.prototype);
     }
 });
 
-export function CoTraits<T extends (new (arg?: any) => any)[]>(...classes: T): new () => FusedClass<T>
+export function CoTraits<T extends Constructor[]>(...classes: T): new () => FusedClass<T>
 {
     return Trait as unknown as new () => FusedClass<T>;
 }
 
-export function FusionOf<T extends (new (arg?: any) => any)[]>(...classes: T): FusedConstructor<T>
+export function FusionOf<T extends Constructor[]>(...classes: T): FusedConstructor<T>
 {
     //For debugging it's nice to have a named function to decern different Fusions. Hence this extra step, that could be skipped for efficiency.
     const funcNamer = new Function(`return function FusionOf_${classes.map(clss => clss.name).join("_")}(){};`);
@@ -44,7 +44,7 @@ export function FusionOf<T extends (new (arg?: any) => any)[]>(...classes: T): F
 
     //Despite a consolidated prototype chain, we want all the constructors of the composing classes to be called in order. Hence we intercept the construction of the fused class with a proxy
     //to run each classes constrcutor function.
-    const ShadowedFusion = new Proxy(
+    const FusedInterceptor = new Proxy(
         Fused,
         {
             construct(target: any, args: any[], newTarget: any)
@@ -55,13 +55,13 @@ export function FusionOf<T extends (new (arg?: any) => any)[]>(...classes: T): F
 
                 //We setup the module variables to represent the current construction process. 
                 //We reverse the args to be able to "pop" them - instead of unshifting (which is less efficient).
-                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args[0]?.reverse() ?? [], newTarget as unknown as new (arg?: any) => any];
+                [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [0, classes, args?.reverse() ?? [], newTarget as unknown as new (arg?: any) => any];
 
                 //We construct the first class in the chain. 
                 //As the args array only contains parameters for classes with constructor args, we check if we need to supply any. If the constructor is parameterless (constructor.length === 0) we only supply an empty array.
                 //As arguments are evaled left to right, we increment the pointer in the last position that we need it, to keep it at the current value throughout this construct call.
                 //For gzip/bzip compression purposes we keep the call string the same as within the composable proxy handler down below. Hence the use of "currentPointer" instead of "0";
-                const instance = Reflect.construct(currentChain[currentPointer], currentChain[currentPointer++].length ? [currentArgs!.pop()] : [], currentProtoCarrier);
+                const instance = Reflect.construct(currentChain[currentPointer++], currentArgs!.pop() ?? [], currentProtoCarrier);
 
                 //We restore the state before this potentially nested constructor call
                 [currentPointer, currentChain, currentArgs, currentProtoCarrier] = [oldPointer, oldChain, oldArgs, oldProtoCarrier];
@@ -71,9 +71,9 @@ export function FusionOf<T extends (new (arg?: any) => any)[]>(...classes: T): F
         }) as unknown as FusedConstructor<T>;
 
     Fused.fusion.add(Fused);
-    Fused.fusion.add(ShadowedFusion);
+    Fused.fusion.add(FusedInterceptor);
 
-    return ShadowedFusion;
+    return FusedInterceptor;
 }
 
 function flattenPrototypeChain(prototype: any, chainAccumulator: any)

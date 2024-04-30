@@ -69,16 +69,12 @@ export class InstantiationTests
         instantiationInspector.testCache = [];
 
         const CombinedClass = FusionOf(OptionalParameter, RequiredParameter, MultipleParameters);
-        const instance = new CombinedClass([
-            { optional: 42 },
-            { required: "test" },
-            { start: 1, end: 10 }
-        ]);
+        const instance = new CombinedClass([42], ["test"], [100, 200]);
 
         assert.deepStrictEqual(instantiationInspector.testCache, [
-            [{ optional: 42 }],
-            [{ required: "test" }],
-            [{ start: 1, end: 10 }]
+            [42],
+            ["test"],
+            [100, 200]
         ]);
     }
 
@@ -88,15 +84,12 @@ export class InstantiationTests
 
         const CombinedClass = FusionOf(OptionalParameter, Parameterless, RequiredParameter);
 
-        const instance = new CombinedClass([
-            { optional: 123 },
-            { required: "delivered" }
-        ]);
+        const instance = new CombinedClass([], [], ["test"]);
 
         assert.deepStrictEqual(instantiationInspector.testCache, [
-            [{ optional: 123 }],
             [],
-            [{ required: "delivered" }]
+            [],
+            ["test"]
         ]);
     }
 
@@ -109,8 +102,7 @@ export class InstantiationTests
 
         assert.deepStrictEqual(instantiationInspector.testCache, [
             [],
-            //undefined is expected here as we are dealing with an optional value. If the constructor's length property is greater 0 it will get a value supplied.
-            [undefined]
+            []
         ]);
     }
 }

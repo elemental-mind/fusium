@@ -2,6 +2,8 @@
 
 import { Trait, CoTraits, FusionOf } from "./fusium.js";
 
+//Base classes
+
 class Parameterless extends Trait
 {
     public paraless = 0;
@@ -11,9 +13,9 @@ class OptionalParameter extends Trait
 {
     public optional = true;
 
-    constructor(optionalParameter?: {
-        argument: number;
-    })
+    constructor(
+        argument?: number
+    )
     {
         super();
     }
@@ -21,11 +23,20 @@ class OptionalParameter extends Trait
 
 class RequiredParameter extends Trait
 {
-    public required = "yes";
+    constructor(
+        public required: string
+    )
+    {
+        super();
+    }
+}
 
-    constructor(requiredParameter: {
-        argument: string;
-    })
+class PartiallyRequired extends Trait
+{
+    constructor(
+        public required: string,
+        public optional?: number 
+    )
     {
         super();
     }
@@ -33,47 +44,12 @@ class RequiredParameter extends Trait
 
 class MultipleParameters extends Trait
 {
-    public start: number;
-    public end: number;
-
-    constructor(multiParameter: {
-        start: number,
-        end: number;
-    })
+    constructor(
+        public start: number,
+        public end: number
+    )
     {
         super();
-        this.start = multiParameter.start;
-        this.end = multiParameter.end;
-    }
-}
-
-class CheckFused extends FusionOf(Parameterless, OptionalParameter, RequiredParameter, MultipleParameters)
-{
-    constructor()
-    {
-        super([, { argument: "yes" }, { start: 100, end: 200 }]);
-    }
-
-    checkIfMembersOnType()
-    {
-        this.optional = true;
-        this.paraless = 100;
-        this.required = "checked";
-        this.start = 100;
-        this.end = 200;
-    }
-}
-
-class CheckMemberTraitWithCoTraits extends CoTraits(RequiredParameter)
-{
-    constructor()
-    {
-        super();
-    }
-
-    checkIfMembersOnType()
-    {
-        this.required = "checked";
     }
 }
 
@@ -100,4 +76,51 @@ class TraitC extends CoTraits(TraitB)
 class TraitD extends FusionOf(TraitB, TraitA)
 {
 
+}
+
+//Test cases
+
+class CheckFused extends FusionOf(RequiredParameter, MultipleParameters, OptionalParameter, Parameterless)
+{
+    checkIfMembersOnType()
+    {
+        this.optional = true;
+        this.paraless = 100;
+        this.required = "checked";
+        this.start = 100;
+        this.end = 200;
+    }
+}
+
+class CheckMemberTraitWithCoTraits extends CoTraits(RequiredParameter)
+{
+    constructor()
+    {
+        super();
+    }
+
+    checkIfMembersOnType()
+    {
+        this.required = "checked";
+    }
+}
+
+function checkParameterOptionalisation()
+{
+    const FusedType = FusionOf(Parameterless, OptionalParameter, RequiredParameter, MultipleParameters);
+
+    const permitsEmptyArrays = new FusedType([], [], ["string"], [100,200]);
+    const permitsUndefined = new FusedType(undefined, undefined, ["string"], [100, 200]);
+
+    const OptionalsOnEnd = FusionOf(RequiredParameter, OptionalParameter, Parameterless);
+
+    const permitsOmissionOfParameterArrays = new OptionalsOnEnd(["string"]);
+
+    const OnlyOptionals = FusionOf(OptionalParameter, Parameterless);
+
+    const permitsOmissionOfAllParameters = new OnlyOptionals();
+
+    const WithPartiallyOptional = FusionOf(OptionalParameter, PartiallyRequired);
+
+    const permitsOmissionOfConstrcutorOptionals = new WithPartiallyOptional([], ["test"]);
 }
